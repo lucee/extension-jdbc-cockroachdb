@@ -1,0 +1,362 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://www.w3.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.lucee</groupId>
+    <artifactId>cockroachdb-jdbc-extension</artifactId>
+    <version>${cockroachdb.jdbc.version}</version>
+    <packaging>pom</packaging>
+    <name>CockroachDB JDBC</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <id>C1A2B3C4-D5E6-47F8-9A0BC1D2E3F4A5B6</id>
+        <luceeCoreVersion>6.2.2.91</luceeCoreVersion>
+        <releaseType>server</releaseType>
+        <cockroachdb.jdbc.version>2.0.1</cockroachdb.jdbc.version>
+        <connstr>jdbc:cockroachdb://{host}:{port}/{database}</connstr>
+        <jdbcid>cockroachdb</jdbcid>
+        <label>CockroachDB JDBC Driver</label>
+        <release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</release.url>
+        <snapshot.url>https://oss.sonatype.org/content/repositories/snapshots/</snapshot.url>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>15.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.kai-niemi.cockroachdb.jdbc</groupId>
+            <artifactId>cockroachdb-jdbc</artifactId>
+            <version>${cockroachdb.jdbc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.7</version>
+        </dependency>
+    </dependencies>
+    <scm>
+        <url>https://github.com/lucee/extension-jdbc-cockroachdb</url>
+        <connection>scm:git:git://github.com/lucee/extension-jdbc-cockroachdb.git</connection>
+        <developerConnection>scm:git:git@github.com:lucee/extension-jdbc-cockroachdb.git</developerConnection>
+        <tag>${project.version}</tag>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>The GNU Lesser General Public License, Version 2.1</name>
+            <url>http://www.gnu.org/licenses/lgpl-2.1.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>zspitzer</id>
+            <name>Zac Spitzer</name>
+            <email>zac@lucee.org</email>
+            <organization>Lucee Association Switzerland</organization>
+            <organizationUrl>http://lucee.org</organizationUrl>
+            <roles>
+                <role>Project-Administrator</role>
+                <role>Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+    </developers>
+
+    <description>JDBC Type 4 Driver for CockroachDB.</description>
+    <url>https://github.com/lucee/extension-jdbc-cockroachdb</url>
+
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- GPG sign -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <files>
+                                        <file>${project.build.directory}/${project.artifactId}-${project.version}.lex</file>
+                                    </files>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <configuration>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <useReleaseProfile>false</useReleaseProfile>
+                            <releaseProfiles>release</releaseProfiles>
+                            <goals>deploy</goals>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-cockroachdb-jar</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeGroupIds>io.github.kai-niemi.cockroachdb.jdbc,org.postgresql</includeGroupIds>
+                            <includeArtifactIds>cockroachdb-jdbc,postgresql</includeArtifactIds>
+                            <outputDirectory>${project.build.directory}/dependency</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <!-- Antrun plugin to execute the Ant build -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.openjdk.nashorn</groupId>
+                        <artifactId>nashorn-core</artifactId>
+                        <version>15.4</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Create OSGi bundle from dependencies -->
+                                <mkdir dir="${project.build.directory}/osgi-temp"/>
+
+                                <!-- Extract CockroachDB and PostgreSQL jars -->
+                                <unzip src="${project.build.directory}/dependency/cockroachdb-jdbc-${cockroachdb.jdbc.version}.jar"
+                                       dest="${project.build.directory}/osgi-temp">
+                                    <patternset>
+                                        <exclude name="META-INF/MANIFEST.MF"/>
+                                    </patternset>
+                                </unzip>
+                                <unzip src="${project.build.directory}/dependency/postgresql-42.7.7.jar"
+                                       dest="${project.build.directory}/osgi-temp">
+                                    <patternset>
+                                        <exclude name="META-INF/MANIFEST.MF"/>
+                                    </patternset>
+                                </unzip>
+
+                                <!-- Create OSGi manifest that avoids java.* imports -->
+                                <echo file="${project.build.directory}/osgi-temp/META-INF/MANIFEST.MF">Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: cockroachdb-jdbc
+Bundle-Name: CockroachDB JDBC Driver OSGi Bundle
+Bundle-Version: ${cockroachdb.jdbc.version}
+Bundle-Description: OSGi bundle for CockroachDB JDBC driver
+Bundle-Vendor: Lucee Association Switzerland
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Export-Package: io.cockroachdb.jdbc;version="${cockroachdb.jdbc.version}",
+ io.github.kai_niemi.cockroachdb.jdbc;version="${cockroachdb.jdbc.version}",
+ org.postgresql;version="42.7.7",
+ org.postgresql.copy;version="42.7.7",
+ org.postgresql.core;version="42.7.7",
+ org.postgresql.ds;version="42.7.7",
+ org.postgresql.ds.common;version="42.7.7",
+ org.postgresql.fastpath;version="42.7.7",
+ org.postgresql.geometric;version="42.7.7",
+ org.postgresql.jdbc;version="42.7.7",
+ org.postgresql.largeobject;version="42.7.7",
+ org.postgresql.ssl;version="42.7.7",
+ org.postgresql.util;version="42.7.7",
+ org.postgresql.xa;version="42.7.7"
+Import-Package: javax.sql,
+ javax.naming;resolution:=optional,
+ javax.net.ssl;resolution:=optional,
+ javax.transaction.xa;resolution:=optional,
+ org.slf4j;resolution:=optional;version="[1.6,3)",
+ javax.xml.parsers;resolution:=optional,
+ javax.xml.transform;resolution:=optional,
+ javax.xml.transform.stream;resolution:=optional
+</echo>
+
+                                <!-- Create the OSGi bundle JAR -->
+                                <jar destfile="${project.basedir}/cockroachdb-jdbc-${cockroachdb.jdbc.version}-osgi.jar"
+                                     basedir="${project.build.directory}/osgi-temp"
+                                     manifest="${project.build.directory}/osgi-temp/META-INF/MANIFEST.MF"/>
+
+                                <!-- Clean up temp directory -->
+                                <delete dir="${project.build.directory}/osgi-temp"/>
+
+                                <!-- Copy the original JAR as fallback in case OSGi bundle isn't found -->
+                                <copy file="${project.build.directory}/dependency/cockroachdb-jdbc-${cockroachdb.jdbc.version}.jar"
+                                      tofile="${project.basedir}/cockroachdb-jdbc-${cockroachdb.jdbc.version}.jar"
+                                      failonerror="false"/>
+
+                                <!-- Now run the ant build which will pick up the OSGi jar -->
+                                <ant antfile="build.xml" target="clean">
+                                    <property name="id" value="${id}" />
+                                    <property name="label" value="${label}" />
+                                    <property name="description" value="${project.description}" />
+                                    <property name="filename" value="${project.artifactId}" />
+                                    <property name="jdbcid" value="${jdbcid}" />
+                                    <property name="connstr" value="${connstr}" />
+                                </ant>
+
+                                <!-- Clean up the copied JAR files after ant build -->
+                                <delete>
+                                    <fileset dir="${project.basedir}">
+                                        <include name="cockroachdb-jdbc-*.jar" />
+                                    </fileset>
+                                </delete>
+
+                                <condition property="isSnapshot" value="true" else="false">
+                                    <matches string="${project.version}" pattern=".*-SNAPSHOT" />
+                                </condition>
+                                <condition property="deploy.url" value="${snapshot.url}">
+                                    <istrue value="${isSnapshot}" />
+                                </condition>
+                                <condition property="deploy.url" value="${release.url}">
+                                    <isfalse value="${isSnapshot}" />
+                                </condition>
+                                <echo message="Deploying to URL: ${deploy.url}" />
+                            </target>
+                            <exportAntProperties>true</exportAntProperties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <!-- Build Helper Plugin to attach additional artifacts -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>
+                                        ${project.build.directory}/${project.artifactId}-${project.version}.lex</file>
+                                    <type>lex</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Clean plugin to remove extra folders -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>cleanup</id>
+                        <phase>post-package</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.build.directory}/antrun</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </fileset>
+                                <fileset>
+                                    <directory>${project.build.directory}/archive-tmp</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Deploy Plugin to deploy the .lex file -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.0.0-M1</version>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy-file</goal>
+                        </goals>
+                        <configuration>
+                            <file>${project.build.directory}/${project.artifactId}-${project.version}.lex</file>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <version>${project.version}</version>
+                            <repositoryId>ossrh</repositoryId>
+                            <url>${deploy.url}</url>
+                            <packaging>lex</packaging>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Nexus Staging Maven Plugin to automate the release process -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>ossrh</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
